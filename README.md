@@ -227,10 +227,13 @@ local-RAG-cli/
 
 ## 💬 Future Enhancements
 
-* 🌐 Web-based interface using Streamlit or FastAPI
-* 🔄 Incremental document updates
+* 🌐 Web-based interface using Streamlit
+* 🧾 Optimise Chunk size
+* 🔄 Multi document ingestion support
 * 🗂️ Multi-user support
 * 🧠 Embedding model selection from CLI
+* 📦 Deploy using Docker
+
 
 ---
 
