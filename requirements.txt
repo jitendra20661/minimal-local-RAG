@@ -1,0 +1,6 @@
+docling
+langchain
+langchain_community
+chromadb
+ollama
+nomic-embed-text

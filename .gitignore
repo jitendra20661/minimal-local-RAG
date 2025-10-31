@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# Allow specific files and directories
+!sample_pdfs/
+!main.py
+!requirements.txt
+!README.md
+
+# Allow .gitignore itself
+!.gitignore
