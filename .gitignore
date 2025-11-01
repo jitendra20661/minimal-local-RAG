@@ -1,11 +1,33 @@
 # Ignore everything by default
 *
 
-# Allow specific files and directories
-!sample_pdfs/
-!main.py
+# Allow specific Python files
+!*.py
 !requirements.txt
 !README.md
+!CLAUDE.md
+!.env.example
+
+# Allow specific directories
+!sample_pdfs/
+!tests/
+
+# Ignore environment and cache files
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Ignore database and logs
+laq_db/
+*.log
 
 # Allow .gitignore itself
 !.gitignore
