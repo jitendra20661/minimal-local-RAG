@@ -1,246 +1,378 @@
+# LAQ RAG System - Production Web Application
 
-# Local Retrieval-Augmented Generation (RAG) with a Simple CLI Interface
+A minimal, privacy-friendly Retrieval-Augmented Generation (RAG) system that runs entirely locally without external API calls. The system processes Legislative Assembly Question (LAQ) PDFs, extracts Q&A pairs using LLMs, stores them in a vector database, and enables semantic search and chat interactions through a modern web interface.
 
-A minimal, privacy-friendly Retrieval-Augmented Generation (RAG) system that runs **entirely on your local machine** — no external API calls or cloud dependencies.
-This project lets you upload documents, embed them into a local vector database, and chat with them through a simple menu-driven Command Line Interface (CLI).
+## 🏗️ Architecture
 
-
-#### 🤖 What is RAG?
-
-RAG stands for Retrieval-Augmented Generation — a technique that combines information retrieval with language generation to produce more accurate and context-aware responses.
-
-
-In simple words, 
-Instead of relying only on what the model was trained on, RAG allows it to look up relevant information from an external knowledge source (like your documents) before answering.
-
-
-## 🧰 Tech Stack
-
-| Component | Technology |
-|------------|-------------|
-| **Language Model (LLM)** | [Mistral](https://mistral.ai) via [Ollama](https://ollama.ai) |
-| **Embeddings Model** | `nomic-embed-text` |
-| **Vector Database** | [ChromaDB](https://www.trychroma.com) |
-| **Document Conversion** | [Docling](https://pypi.org/project/docling/) |
-| **Language** | Python 3.10+ |
-| **Interface** | Menu-driven CLI |
-
-### 🧩 Supporting Libraries
-
-- **`os`** and **`pathlib`** → for file handling and directory management  
-- **`re`** → for regular expression–based text cleaning and preprocessing  
-
-
-
-
-
-## 🧾 Installation
-
-#### 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/jeetsahoo/local-RAG-cli.git
-cd local-RAG-cli
+```
+minimal-local-RAG/
+├── frontend/              # React + Vite web application
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   ├── pages/        # Page components
+│   │   ├── services/     # API service layer
+│   │   └── styles/       # CSS styles
+│   └── package.json
+│
+├── backend/              # FastAPI REST API
+│   ├── app/
+│   │   ├── api/         # API endpoints
+│   │   ├── core/        # Configuration
+│   │   ├── models/      # Pydantic schemas
+│   │   └── services/    # Business logic
+│   └── requirements.txt
+│
+├── docs/                 # Documentation
+│   ├── CLAUDE.md        # Development guide
+│   ├── DESIGN_GUIDE.md  # Design system
+│   └── STYLE_GUIDE.md   # UI style guide
+│
+└── sample_pdfs/         # Sample LAQ PDFs
 ```
 
-#### 2️⃣ Create and Activate a Virtual Environment
+## 🚀 Tech Stack
 
+### Backend
+- **Framework:** FastAPI (async, high-performance)
+- **LLM:** Mistral (via Ollama)
+- **Embeddings:** nomic-embed-text (via Ollama)
+- **Vector DB:** ChromaDB (cosine similarity)
+- **Document Processing:** Docling (PDF to Markdown)
+- **Validation:** Pydantic
+
+### Frontend
+- **Framework:** React 18
+- **Build Tool:** Vite (fast, modern)
+- **Routing:** React Router v6
+- **HTTP Client:** Axios
+- **Styling:** Vanilla CSS (design system)
+
+## 📋 Prerequisites
+
+### Required
+1. **Python 3.10+**
+2. **Node.js 18+** and npm
+3. **Ollama** with required models:
+   ```bash
+   # Install Ollama from https://ollama.ai
+   ollama pull mistral
+   ollama pull nomic-embed-text
+   ```
+
+### Verify Installation
 ```bash
+# Check Python
+python --version
+
+# Check Node.js
+node --version
+
+# Check Ollama
+ollama list
+```
+
+## 🛠️ Installation
+
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd minimal-local-RAG
+```
+
+### 2. Backend Setup
+```bash
+cd backend
+
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Activate virtual environment
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment file
+cp ../.env.example .env
+
+# Edit .env if needed (optional)
 ```
 
-#### 3️⃣ Install Dependencies
-
+### 3. Frontend Setup
 ```bash
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Edit .env if needed (optional - default: http://localhost:8000)
+```
+
+## 🎯 Running the Application
+
+### Start Backend (Terminal 1)
+```bash
+cd backend
+source venv/bin/activate  # Activate venv
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend will be available at:
+- **API:** http://localhost:8000
+- **Swagger Docs:** http://localhost:8000/api/docs
+- **ReDoc:** http://localhost:8000/api/redoc
+
+### Start Frontend (Terminal 2)
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend will be available at:
+- **Web App:** http://localhost:5173
+
+### Verify Everything Works
+1. Open http://localhost:5173
+2. You should see the LAQ RAG Dashboard
+3. Check database stats on the dashboard
+
+## 📚 API Endpoints
+
+### Upload
+- `POST /api/upload/` - Upload and process LAQ PDF
+
+### Search
+- `POST /api/search/` - Semantic search on LAQs
+  ```json
+  {
+    "query": "education budget",
+    "top_k": 5,
+    "threshold": 0.6
+  }
+  ```
+
+### Chat
+- `POST /api/chat/` - Chat with LAQ knowledge base
+  ```json
+  {
+    "question": "What is the education budget?",
+    "top_k": 5
+  }
+  ```
+
+### Database
+- `GET /api/database/info` - Get database information
+
+### Health
+- `GET /api/health` - Health check endpoint
+
+## 🎨 Features
+
+### ✅ Implemented
+- 🏠 **Dashboard:** Overview with database stats
+- 🔍 **Search:** Semantic search with similarity scores
+- 📊 **Database Info:** View collection statistics
+- 🎨 **Dark Mode UI:** Following Perplexity Pro design system
+- 📱 **Responsive:** Mobile-friendly interface
+
+### 🚧 Coming Soon
+- 💬 **Chat Interface:** Full conversational UI
+- 📤 **Drag & Drop Upload:** PDF upload with progress
+- 📈 **Analytics:** Usage statistics and insights
+- 🔐 **Authentication:** User management (optional)
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+pytest tests/ -v
+
+# With coverage
+pytest tests/ --cov=app --cov-report=html
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test  # Coming soon
+```
+
+## 📖 Usage Guide
+
+### 1. Upload LAQ PDF
+- Navigate to Upload page
+- Select PDF file
+- System will:
+  - Extract Q&A pairs
+  - Generate embeddings
+  - Store in vector database
+
+### 2. Search LAQs
+- Navigate to Search page
+- Enter search query
+- View results with similarity scores
+- See metadata (LAQ number, minister, date)
+
+### 3. Chat with LAQs
+- Navigate to Chat page
+- Ask questions in natural language
+- Get answers with source citations
+
+### 4. View Database Info
+- Navigate to Database page
+- See collection statistics
+- View configuration
+
+## 🔧 Configuration
+
+### Backend (.env)
+```bash
+# Database
+DB_PATH=./laq_db
+COLLECTION_NAME=laqs
+
+# Ollama
+OLLAMA_BASE_URL=http://localhost:11434
+LLM_MODEL=mistral
+EMBEDDING_MODEL=nomic-embed-text
+
+# RAG Settings
+TOP_K=5
+SIMILARITY_THRESHOLD=0.6
+TEMPERATURE=0.1
+```
+
+### Frontend (.env)
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+## 📁 Project Structure Details
+
+### Backend Services
+- **config.py:** Configuration management
+- **database.py:** ChromaDB operations
+- **embeddings.py:** Embedding generation
+- **pdf_processor.py:** PDF processing pipeline
+- **rag.py:** Search and chat logic
+
+### Frontend Pages
+- **Dashboard:** Overview and quick actions
+- **Search:** Semantic search interface
+- **Chat:** Conversational interface (coming soon)
+- **Upload:** PDF upload (coming soon)
+- **Database:** Database information (coming soon)
+
+## 🎨 Design System
+
+The application follows a comprehensive design system inspired by Perplexity Pro:
+
+- **Colors:** OKLCH color space, dark mode first
+- **Typography:** System fonts, optimized weights
+- **Spacing:** 8px grid system
+- **Components:** Reusable, accessible UI components
+
+See `docs/DESIGN_GUIDE.md` for complete design specifications.
+
+## 🚀 Deployment (Future)
+
+### Backend
+```bash
+# Production server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+### Frontend
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+Serve the `dist/` folder with any static file server.
+
+## 🐛 Troubleshooting
+
+### Ollama Connection Error
+```bash
+# Ensure Ollama is running
+ollama serve
+
+# Check models are installed
+ollama list
+```
+
+### Backend Import Errors
+```bash
+# Ensure you're in the backend directory
+cd backend
+
+# Ensure venv is activated
+source venv/bin/activate
+
+# Reinstall dependencies
 pip install -r requirements.txt
 ```
 
-#### 4️⃣ Run Ollama in the Background
-
-Make sure Ollama is installed and running:
-
+### Frontend Build Errors
 ```bash
-ollama run llama3
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-#### 5️⃣ Launch the CLI
+### CORS Errors
+- Ensure backend is running on port 8000
+- Check CORS configuration in `backend/app/main.py`
+- Verify `VITE_API_BASE_URL` in frontend `.env`
 
-```bash
-python main.py
-```
+## 📝 Development Notes
 
+### Adding New API Endpoint
+1. Create endpoint in `backend/app/api/endpoints/`
+2. Add router to `backend/app/main.py`
+3. Update frontend service in `frontend/src/services/api.js`
+4. Create UI component in frontend
 
+### Adding New Page
+1. Create component in `frontend/src/pages/`
+2. Add route in `frontend/src/App.jsx`
+3. Add navigation link in `Sidebar.jsx`
 
+## 🤝 Contributing
 
-## 🚀 How to Run
+1. Follow the design guide (`docs/DESIGN_GUIDE.md`)
+2. Maintain code style consistency
+3. Write tests for new features
+4. Update documentation
 
-### 1. Run the Main Program
+## 📄 License
 
-```bash
-python main.py
-```
+[Your License Here]
 
-You’ll see the following interactive menu:
+## 🙏 Acknowledgments
 
-```
-====================================================================================================
-LAQ RAG PIPELINE
-====================================================================================================
-1. Upload PDF
-2. Search LAQ
-3. Chat with LAQ
-4. Clear Database
-5. Exit
-====================================================================================================
-Select (1-5):
-```
+- **Perplexity AI** - UI/UX inspiration
+- **Ollama** - Local LLM infrastructure
+- **ChromaDB** - Vector database
+- **FastAPI** - Modern Python web framework
+- **React** - UI library
 
+## 📞 Support
 
-## 🧭 Menu Options Explained
-
-### **1️⃣ Upload PDF**
-
-1. Enter the file path to a PDF (e.g. `assets/sample_pdfs/question1.pdf`).
-2. The system will:
-
-   * Convert the **PDF → Markdown** using **Docling**.
-   * Send the markdown to **Mistral LLM** (via **Ollama**).
-   * Mistral structures the text into a clean JSON format:
-
-     ```json
-     {
-       "pdf_title": "Road Development Projects",
-       "laq_type": "Starred",
-       "laq_number": "QA-324",
-       "minister": "Mr. X",
-       "date": "2024-07-10",
-       "qa_pairs": [
-         {"question": "What is the budget?", "answer": "Rs. 50 crores allocated."}
-       ],
-       "attachments": ["Annexure-A.pdf"]
-     }
-     ```
-   * The structured Q&A pairs are embedded using **nomic-embed-text** and stored in **ChromaDB**.
-3. You’ll be asked:
-
-   ```
-   ✅ Store this data in database? (yes/no):
-   ```
-4. Type `yes` to confirm saving.
-
-At the end, you’ll see something like:
-
-```
-✅ Stored 5/5 Q&A pairs from question1.pdf
-```
+For issues and questions:
+- Check `docs/CLAUDE.md` for development guide
+- See API docs at http://localhost:8000/api/docs
+- Review design guide in `docs/DESIGN_GUIDE.md`
 
 ---
 
-### **2️⃣ Search LAQ**
-
-**Purpose:** Find relevant questions and answers semantically.
-
-**How it works:**
-
-1. Enter a natural language query, for example:
-
-   ```
-   Enter query: road construction projects in 2024
-   ```
-2. The system:
-
-   * Embeds your query.
-   * Searches similar embeddings in **ChromaDB**.
-   * Displays the top 5 matches with metadata, confidence score, and context.
-
-**Example Output:**
-
-```
-📍 SOURCE: ROAD_DEVELOPMENT_PROJECTS
-LAQ #QA-324 (Starred) | Date: 2024-07-10 | 🟢 STRONG MATCH (89.4%)
-
-👤 Minister: Mr. X
-
-❓ QUESTION:
-   What is the budget for road construction projects this year?
-
-✅ ANSWER:
-   Rs. 50 crores have been allocated for new road projects.
-```
-
----
-
-### **3️⃣ Chat with LAQ**
-
-**Purpose:** Have a conversational interaction with the retrieved LAQs.
-
-**How it works:**
-
-1. Type a question, for example:
-
-   ```
-   Enter query: Tell me about the funds for road projects this year
-   ```
-2. The system retrieves the most relevant LAQs, builds a context, and sends them to **Mistral** to generate a contextual, human-like answer.
-
-**Example Output:**
-
-```
-AI RESPONSE:
-The Minister stated that Rs. 50 crores were allocated for new road construction projects in 2024.
-Additional details are in Annexure-A.
-```
-
-💡 *This step performs the actual RAG process — combining retrieval (ChromaDB context) with generation (Mistral LLM).*
-
----
-
-### **4️⃣ Clear Database (Optional)**
-
-**Purpose:** Reset your **ChromaDB** collection.
-Useful when testing new PDFs or starting from scratch.
-
-
-
-
-### **5️⃣ Exit**
-
-Simply quits the application.
-
-
-
-
-
-## 📦 Directory Structure
-
-```
-local-RAG-cli/
-├── main.py                 # Main script file
-├── sample_pdfs/            # Sample documents
-├── laq_db/                 # Local ChromaDB database
-├── requirements.txt        # Dependencies
-└── README.md              
-```
-
----
-
-## 💬 Future Enhancements
-
-* 🌐 Web-based interface using Streamlit
-* 🧾 Optimise Chunk size
-* 🔄 Multi document ingestion support
-* 🗂️ Multi-user support
-* 🧠 Embedding model selection from CLI
-* 📦 Deploy using Docker
-
-
----
-
-## 🧑‍💻 Author
-
-**Jitendra Sahoo**
-
-🔗 [LinkedIn](http://www.linkedin.com/in/jitendra-sahoo-31a187265)
-
-
+**Built with ❤️ for privacy-focused local RAG**

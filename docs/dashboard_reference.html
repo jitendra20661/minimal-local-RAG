@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en" data-color-scheme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAQ RAG Dashboard</title>
+    <style>
+        /* ===== CSS Reset & Base ===== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* Color System - Dark Mode */
+            --background-base-color: #100e12;
+            --background-subtle-color: #1a1820;
+            --background-subtler-color: #252229;
+            --background-raised-color: #2d2a33;
+            --background-elevated-color: #38343f;
+
+            --foreground-color: #e8e6e3;
+            --foreground-quiet-color: #c4c2be;
+            --foreground-quieter-color: #a09d98;
+            --foreground-subtle-color: #7c7975;
+            --foreground-subtler-color: #5a5854;
+
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-hover-color: rgba(255, 255, 255, 0.15);
+
+            /* Accent Colors - Cyan/Teal */
+            --accent-primary: #00d4c4;
+            --accent-primary-hover: #00f5e3;
+            --accent-primary-subtle: rgba(0, 212, 196, 0.15);
+
+            /* Semantic Colors */
+            --positive-color: #4ade80;
+            --negative-color: #f87171;
+            --caution-color: #fbbf24;
+            --attention-color: #60a5fa;
+
+            /* Spacing System */
+            --size-2xs: 2px;
+            --size-xs: 4px;
+            --size-sm: 8px;
+            --size-md: 16px;
+            --size-ml: 24px;
+            --size-lg: 32px;
+            --size-xl: 48px;
+
+            /* Layout */
+            --sidebar-width: 72px;
+            --header-height: 54px;
+            --content-max-width: 1100px;
+            --input-max-width: 740px;
+            --min-touch-target: 44px;
+
+            /* Typography */
+            --font-normal: 375;
+            --font-medium: 475;
+            --font-semibold: 575;
+            --font-bold: 675;
+        }
+
+        html {
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--background-base-color);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         Helvetica, Arial, sans-serif;
+            color: var(--foreground-color);
+            font-weight: var(--font-normal);
+            letter-spacing: 0.01em;
+            overflow-x: hidden;
+        }
+
+        /* ===== Layout ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--background-base-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--size-md) 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-bottom: var(--size-lg);
+        }
+
+        .logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .nav-items {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--size-sm);
+            width: 100%;
+            padding: 0 var(--size-md);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--size-xs);
+            padding: var(--size-sm);
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--foreground-subtle-color);
+            cursor: pointer;
+            transition: all 150ms ease;
+            min-height: var(--min-touch-target);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: var(--background-subtle-color);
+            color: var(--foreground-color);
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: var(--accent-primary-subtle);
+        }
+
+        .nav-item-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-item-label {
+            font-size: 11px;
+            font-weight: var(--font-medium);
+        }
+
+        .account-section {
+            margin-top: auto;
+            padding: var(--size-md);
+        }
+
+        .account-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-semibold);
+            color: var(--background-base-color);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .pro-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--accent-primary);
+            color: var(--background-base-color);
+            font-size: 8px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: var(--font-bold);
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            height: var(--header-height);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--size-lg);
+            background: var(--background-base-color);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: var(--font-semibold);
+            background: linear-gradient(90deg, var(--foreground-color) 70%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--size-sm);
+        }
+
+        .header-button {
+            padding: var(--size-sm) var(--size-md);
+            border-radius: 8px;
+            background: var(--background-subtle-color);
+            border: 1px solid var(--border-color);
+            color: var(--foreground-color);
+            font-size: 14px;
+            font-weight: var(--font-medium);
+            cursor: pointer;
+            transition: all 150ms ease;
+        }
+
+        .header-button:hover {
+            background: var(--background-subtler-color);
+            border-color: var(--border-hover-color);
+        }
+
+        .header-button.primary {
+            background: var(--accent-primary);
+            color: var(--background-base-color);
+            border-color: var(--accent-primary);
+        }
+
+        .header-button.primary:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        /* ===== Content Area ===== */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--size-xl);
+        }
+
+        .content-wrapper {
+            max-width: var(--content-max-width);
+            margin: 0 auto;
+        }
+
+        /* ===== Search Section ===== */
+        .search-section {
+            margin-bottom: var(--size-xl);
+        }
+
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--size-md);
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            width: 100%;
+            max-width: var(--input-max-width);
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--size-md) var(--size-xl);
+            padding-right: 120px;
+            background: var(--background-subtle-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--foreground-color);
+            font-size: 15px;
+            font-weight: var(--font-normal);
+            letter-spacing: 0.01em;
+            transition: all 150ms ease;
+            min-height: var(--min-touch-target);
+        }
+
+        .search-input::placeholder {
+            color: var(--foreground-subtle-color);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--background-subtler-color);
+        }
+
+        .search-icon-toolbar {
+            position: absolute;
+            right: var(--size-sm);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: var(--size-xs);
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 150ms ease;
+        }
+
+        .icon-button:hover {
+            background: var(--accent-primary-subtle);
+        }
+
+        .suggestion-pills {
+            display: flex;
+            gap: var(--size-sm);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pill {
+            padding: var(--size-sm) var(--size-md);
+            border-radius: 9999px;
+            background: var(--background-raised-color);
+            border: 1px solid var(--border-color);
+            color: var(--foreground-color);
+            font-size: 14px;
+            font-weight: var(--font-medium);
+            cursor: pointer;
+            transition: all 150ms ease;
+            display: flex;
+            align-items: center;
+            gap: var(--size-xs);
+        }
+
+        .pill:hover {
+            background: var(--background-elevated-color);
+            border-color: var(--border-hover-color);
+        }
+
+        .pill-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ===== Stats Grid ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--size-md);
+            margin-bottom: var(--size-xl);
+        }
+
+        .stat-card {
+            background: var(--background-subtle-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: var(--size-ml);
+            transition: all 150ms ease;
+        }
+
+        .stat-card:hover {
+            background: var(--background-subtler-color);
+            border-color: var(--border-hover-color);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--foreground-quiet-color);
+            margin-bottom: var(--size-xs);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: var(--font-semibold);
+            color: var(--foreground-color);
+            margin-bottom: var(--size-xs);
+        }
+
+        .stat-change {
+            font-size: 13px;
+            font-weight: var(--font-medium);
+            display: flex;
+            align-items: center;
+            gap: var(--size-xs);
+        }
+
+        .stat-change.positive {
+            color: var(--positive-color);
+        }
+
+        .stat-change.negative {
+            color: var(--negative-color);
+        }
+
+        /* ===== Recent Activity ===== */
+        .section {
+            margin-bottom: var(--size-xl);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--size-md);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: var(--font-semibold);
+            color: var(--foreground-color);
+        }
+
+        .section-action {
+            font-size: 14px;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: var(--font-medium);
+            transition: color 150ms ease;
+        }
+
+        .section-action:hover {
+            color: var(--accent-primary-hover);
+        }
+
+        .activity-list {
+            background: var(--background-subtle-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .activity-item {
+            padding: var(--size-md);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: var(--size-md);
+            transition: background 150ms ease;
+            cursor: pointer;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: var(--background-subtler-color);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--accent-primary-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 15px;
+            font-weight: var(--font-medium);
+            color: var(--foreground-color);
+            margin-bottom: var(--size-xs);
+        }
+
+        .activity-meta {
+            font-size: 13px;
+            color: var(--foreground-quiet-color);
+        }
+
+        .activity-time {
+            font-size: 13px;
+            color: var(--foreground-subtle-color);
+            flex-shrink: 0;
+        }
+
+        /* ===== Database Info ===== */
+        .db-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--size-md);
+        }
+
+        .db-info-card {
+            background: var(--background-subtle-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: var(--size-md);
+        }
+
+        .db-info-label {
+            font-size: 13px;
+            color: var(--foreground-quiet-color);
+            margin-bottom: var(--size-xs);
+        }
+
+        .db-info-value {
+            font-size: 16px;
+            font-weight: var(--font-medium);
+            color: var(--foreground-color);
+        }
+
+        /* ===== Upload Zone ===== */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: var(--size-xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all 150ms ease;
+            background: var(--background-subtle-color);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: var(--background-subtler-color);
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary-subtle);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto var(--size-md);
+            color: var(--accent-primary);
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: var(--font-medium);
+            color: var(--foreground-color);
+            margin-bottom: var(--size-xs);
+        }
+
+        .upload-subtitle {
+            font-size: 14px;
+            color: var(--foreground-quiet-color);
+        }
+
+        /* ===== Modal ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: var(--size-md);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--background-elevated-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: var(--size-ml);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: var(--font-semibold);
+            color: var(--foreground-color);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: var(--foreground-quiet-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 150ms ease;
+        }
+
+        .modal-close:hover {
+            background: var(--background-subtle-color);
+            color: var(--foreground-color);
+        }
+
+        .modal-body {
+            padding: var(--size-ml);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                flex-direction: row;
+                padding: var(--size-sm) var(--size-md);
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-bottom: 72px;
+            }
+
+            .logo {
+                display: none;
+            }
+
+            .nav-items {
+                flex-direction: row;
+                padding: 0;
+                flex: 1;
+                justify-content: space-around;
+            }
+
+            .account-section {
+                padding: 0;
+                margin: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: var(--size-md);
+            }
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-base-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--background-raised-color);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--background-elevated-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 5L5 12.5V27.5L20 35L35 27.5V12.5L20 5Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <circle cx="20" cy="20" r="5" fill="#00d4c4"/>
+                </svg>
+            </div>
+
+            <nav class="nav-items">
+                <button class="nav-item active">
+                    <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="nav-item-label">Home</span>
+                </button>
+
+                <button class="nav-item">
+                    <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span class="nav-item-label">Search</span>
+                </button>
+
+                <button class="nav-item">
+                    <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                    </svg>
+                    <span class="nav-item-label">Chat</span>
+                </button>
+
+                <button class="nav-item">
+                    <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="nav-item-label">Docs</span>
+                </button>
+
+                <button class="nav-item">
+                    <svg class="nav-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                    </svg>
+                    <span class="nav-item-label">Database</span>
+                </button>
+            </nav>
+
+            <div class="account-section">
+                <div class="account-avatar">
+                    R
+                    <span class="pro-badge">PRO</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="header-title">LAQ RAG Dashboard</h1>
+                <div class="header-actions">
+                    <button class="header-button" onclick="showDbInfo()">Database Info</button>
+                    <button class="header-button primary" onclick="showUploadModal()">Upload PDF</button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="content-wrapper">
+                    <!-- Search Section -->
+                    <section class="search-section">
+                        <div class="search-container">
+                            <div class="search-input-wrapper">
+                                <input
+                                    type="text"
+                                    class="search-input"
+                                    placeholder="Ask anything about LAQs. Type @ for mentions."
+                                    id="searchInput"
+                                />
+                                <div class="search-icon-toolbar">
+                                    <button class="icon-button" title="Search">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="icon-button" title="Voice">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="suggestion-pills">
+                                <button class="pill">
+                                    <svg class="pill-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Recent LAQs
+                                </button>
+                                <button class="pill">
+                                    <svg class="pill-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                    Statistics
+                                </button>
+                                <button class="pill">
+                                    <svg class="pill-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                    </svg>
+                                    Chat Mode
+                                </button>
+                                <button class="pill">
+                                    <svg class="pill-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    Quick Search
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Stats Grid -->
+                    <section class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total LAQs</div>
+                            <div class="stat-value">1,247</div>
+                            <div class="stat-change positive">
+                                <span>↑</span>
+                                <span>12% from last week</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">PDFs Processed</div>
+                            <div class="stat-value">156</div>
+                            <div class="stat-change positive">
+                                <span>↑</span>
+                                <span>8% from last week</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">Searches Today</div>
+                            <div class="stat-value">342</div>
+                            <div class="stat-change negative">
+                                <span>↓</span>
+                                <span>3% from yesterday</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">Avg. Relevance Score</div>
+                            <div class="stat-value">87%</div>
+                            <div class="stat-change positive">
+                                <span>↑</span>
+                                <span>5% improvement</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recent Activity -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">Recent Activity</h2>
+                            <a href="#" class="section-action">View all →</a>
+                        </div>
+
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Uploaded sample1.pdf</div>
+                                    <div class="activity-meta">23 Q&A pairs extracted • LAQ Type: Written</div>
+                                </div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Search: "education budget allocation"</div>
+                                    <div class="activity-meta">5 relevant LAQs found • 92% avg. relevance</div>
+                                </div>
+                                <div class="activity-time">5 hours ago</div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Chat session completed</div>
+                                    <div class="activity-meta">8 questions answered • Minister: Health</div>
+                                </div>
+                                <div class="activity-time">Yesterday</div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Uploaded sample2.pdf</div>
+                                    <div class="activity-meta">18 Q&A pairs extracted • LAQ Type: Oral</div>
+                                </div>
+                                <div class="activity-time">2 days ago</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Database Info -->
+                    <section class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">Database Information</h2>
+                            <a href="#" class="section-action" onclick="showDbInfo(); return false;">View details →</a>
+                        </div>
+
+                        <div class="db-info-grid">
+                            <div class="db-info-card">
+                                <div class="db-info-label">Vector Database</div>
+                                <div class="db-info-value">ChromaDB</div>
+                            </div>
+
+                            <div class="db-info-card">
+                                <div class="db-info-label">Embedding Model</div>
+                                <div class="db-info-value">nomic-embed-text</div>
+                            </div>
+
+                            <div class="db-info-card">
+                                <div class="db-info-label">LLM Model</div>
+                                <div class="db-info-value">Mistral</div>
+                            </div>
+
+                            <div class="db-info-card">
+                                <div class="db-info-label">Similarity Metric</div>
+                                <div class="db-info-value">Cosine</div>
+                            </div>
+
+                            <div class="db-info-card">
+                                <div class="db-info-label">Database Size</div>
+                                <div class="db-info-value">2.4 GB</div>
+                            </div>
+
+                            <div class="db-info-card">
+                                <div class="db-info-label">Last Updated</div>
+                                <div class="db-info-value">2 hours ago</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Upload LAQ PDF</h3>
+                <button class="modal-close" onclick="closeUploadModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="uploadZone">
+                    <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <div class="upload-title">Drop PDF file here or click to browse</div>
+                    <div class="upload-subtitle">Supports LAQ PDFs up to 50MB</div>
+                    <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Info Modal -->
+    <div class="modal" id="dbInfoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Database Information</h3>
+                <button class="modal-close" onclick="closeDbInfoModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="db-info-grid">
+                    <div class="db-info-card">
+                        <div class="db-info-label">Collection Name</div>
+                        <div class="db-info-value">laqs</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Database Path</div>
+                        <div class="db-info-value">./laq_db</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Total Documents</div>
+                        <div class="db-info-value">1,247</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Total Embeddings</div>
+                        <div class="db-info-value">1,247</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Similarity Threshold</div>
+                        <div class="db-info-value">0.60</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Top-K Results</div>
+                        <div class="db-info-value">5</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Temperature</div>
+                        <div class="db-info-value">0.1</div>
+                    </div>
+
+                    <div class="db-info-card">
+                        <div class="db-info-label">Ollama Status</div>
+                        <div class="db-info-value">Running</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Upload Modal Functions
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        // Database Info Modal Functions
+        function showDbInfo() {
+            document.getElementById('dbInfoModal').classList.add('active');
+        }
+
+        function closeDbInfoModal() {
+            document.getElementById('dbInfoModal').classList.remove('active');
+        }
+
+        // Close modals on backdrop click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Upload Zone Interactions
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                console.log('File selected:', file.name);
+                // Add your file upload logic here
+                alert(`File "${file.name}" ready for upload!\n\nThis would connect to your Python backend to process the PDF.`);
+            }
+        }
+
+        // Search Input Handler
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value.trim()) {
+                console.log('Searching for:', searchInput.value);
+                // Add your search logic here
+                alert(`Searching for: "${searchInput.value}"\n\nThis would connect to your RAG service for semantic search.`);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                closeUploadModal();
+                closeDbInfoModal();
+            }
+
+            // Ctrl/Cmd + U to open upload modal
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                showUploadModal();
+            }
+
+            // Focus search with /
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
