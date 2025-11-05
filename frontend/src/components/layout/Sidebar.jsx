@@ -27,12 +27,12 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="logo">
+      {/* <div className="logo">
         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 5L5 12.5V27.5L20 35L35 27.5V12.5L20 5Z" stroke="currentColor" strokeWidth="2" fill="none"/>
           <circle cx="20" cy="20" r="5" fill="#00d4c4"/>
         </svg>
-      </div>
+      </div> */}
 
       <nav className="nav-items">
         {navItems.map((item) => {
@@ -50,12 +50,12 @@ function Sidebar() {
         })}
       </nav>
 
-      <div className="account-section">
+      {/* <div className="account-section">
         <div className="account-avatar">
           R
           <span className="pro-badge">PRO</span>
         </div>
-      </div>
+      </div> */}
     </aside>
   )
 }
