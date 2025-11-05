@@ -1,371 +1,378 @@
-# Minimal Local RAG System
+# LAQ RAG System - Production Web Application
 
-A minimal, privacy-friendly **Retrieval-Augmented Generation (RAG)** system that runs **entirely locally** without external API calls. Built specifically for processing Legislative Assembly Question (LAQ) PDFs with semantic search and conversational chat capabilities.
+A minimal, privacy-friendly Retrieval-Augmented Generation (RAG) system that runs entirely locally without external API calls. The system processes Legislative Assembly Question (LAQ) PDFs, extracts Q&A pairs using LLMs, stores them in a vector database, and enables semantic search and chat interactions through a modern web interface.
 
-## What is RAG?
-
-RAG (Retrieval-Augmented Generation) combines information retrieval with language generation. Instead of relying only on what an LLM was trained on, RAG retrieves relevant information from your documents before generating answers—resulting in more accurate, context-aware, and factual responses.
-
-## Features
-
-- **100% Local & Private** - No external API calls, all processing happens on your machine
-- **Modular Architecture** - Clean separation of concerns across 7 focused modules
-- **Type-Safe** - Pydantic models ensure data validation and schema compliance
-- **Progress Tracking** - Visual feedback with progress bars for long operations
-- **Smart Search** - Semantic search with relevance scoring and color-coded match quality
-- **Conversational Chat** - RAG-powered chat with source citations
-- **Configurable** - Environment variable support via `.env` file
-- **Tested** - Unit tests with pytest for core components
-- **Error Handling** - Actionable error messages guide you to solutions
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| **LLM** | [Mistral](https://mistral.ai) via [Ollama](https://ollama.ai) |
-| **Embeddings** | `nomic-embed-text` via Ollama |
-| **Vector Database** | [ChromaDB](https://www.trychroma.com) with cosine similarity |
-| **Document Processing** | [Docling](https://github.com/DS4SD/docling) (PDF → Markdown) |
-| **Data Validation** | [Pydantic](https://docs.pydantic.dev/) |
-| **CLI Interface** | Python with tqdm progress bars |
-| **Language** | Python 3.10+ |
-
-## Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Maxwell-Fernandes/minimal-local-RAG.git
-cd minimal-local-RAG
-```
-
-### 2. Set Up Python Environment
-
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate it
-source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate     # Windows
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Install and Configure Ollama
-
-**Install Ollama:**
-- Download from [https://ollama.ai](https://ollama.ai)
-- Follow installation instructions for your OS
-
-**Pull Required Models:**
-```bash
-# Start Ollama (if not auto-started)
-ollama serve
-
-# Pull models (in a new terminal)
-ollama pull mistral
-ollama pull nomic-embed-text
-```
-
-### 5. (Optional) Configure Environment
-
-```bash
-cp .env.example .env
-# Edit .env to customize settings (model names, thresholds, etc.)
-```
-
-### 6. Run the Application
-
-```bash
-python main.py
-```
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
 minimal-local-RAG/
-├── main.py              # Entry point
-├── config.py            # Configuration management with environment variables
-├── database.py          # ChromaDB operations (batch insert, search, filtering)
-├── embeddings.py        # Embedding generation with Ollama
-├── pdf_processor.py     # PDF → structured data pipeline with Pydantic
-├── rag.py               # Search and chat logic
-├── cli.py               # Interactive command-line interface
-├── tests/               # Unit tests
-│   ├── test_config.py
-│   ├── test_pdf_processor.py
-│   └── README.md
-├── sample_pdfs/         # Sample LAQ PDFs for testing
-├── requirements.txt     # Python dependencies
-├── .env.example         # Environment configuration template
-├── CLAUDE.md           # Developer documentation
-└── README.md           # This file
+├── frontend/              # React + Vite web application
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   ├── pages/        # Page components
+│   │   ├── services/     # API service layer
+│   │   └── styles/       # CSS styles
+│   └── package.json
+│
+├── backend/              # FastAPI REST API
+│   ├── app/
+│   │   ├── api/         # API endpoints
+│   │   ├── core/        # Configuration
+│   │   ├── models/      # Pydantic schemas
+│   │   └── services/    # Business logic
+│   └── requirements.txt
+│
+├── docs/                 # Documentation
+│   ├── CLAUDE.md        # Development guide
+│   ├── DESIGN_GUIDE.md  # Design system
+│   └── STYLE_GUIDE.md   # UI style guide
+│
+└── sample_pdfs/         # Sample LAQ PDFs
 ```
 
-## How It Works
+## 🚀 Tech Stack
 
-### 1. PDF Upload Pipeline
+### Backend
+- **Framework:** FastAPI (async, high-performance)
+- **LLM:** Mistral (via Ollama)
+- **Embeddings:** nomic-embed-text (via Ollama)
+- **Vector DB:** ChromaDB (cosine similarity)
+- **Document Processing:** Docling (PDF to Markdown)
+- **Validation:** Pydantic
 
-```
-PDF File → Docling (PDF→Markdown) → Mistral LLM (Extract Structure)
-→ Pydantic Validation → Embedding Generation → ChromaDB Storage
-```
+### Frontend
+- **Framework:** React 18
+- **Build Tool:** Vite (fast, modern)
+- **Routing:** React Router v6
+- **HTTP Client:** Axios
+- **Styling:** Vanilla CSS (design system)
 
-1. **File Validation**: Checks file exists, has .pdf extension, warns on large files
-2. **Markdown Extraction**: Docling converts PDF to structured markdown
-3. **LLM Structuring**: Mistral extracts Q&A pairs into validated JSON schema
-4. **Data Validation**: Pydantic models ensure data quality and completeness
-5. **Embedding**: nomic-embed-text generates vector embeddings with progress bars
-6. **Storage**: Batch insertion into ChromaDB with duplicate detection
+## 📋 Prerequisites
 
-### 2. Search Workflow
+### Required
+1. **Python 3.10+**
+2. **Node.js 18+** and npm
+3. **Ollama** with required models:
+   ```bash
+   # Install Ollama from https://ollama.ai
+   ollama pull mistral
+   ollama pull nomic-embed-text
+   ```
 
-```
-User Query → Embedding → ChromaDB Similarity Search
-→ Relevance Filtering → Ranked Results Display
-```
-
-- Semantic search using cosine similarity
-- Match quality scoring: 🟢 Strong (80%+), 🟡 Moderate (60-79%), 🔴 Weak (<60%)
-- Displays full context: question, answer, minister, date, attachments
-
-### 3. Chat Workflow
-
-```
-User Question → Retrieve Top-K LAQs → Build Context
-→ Mistral Generation (Low Temperature) → Answer with Citations
-```
-
-- Retrieves most relevant LAQs as context
-- Instructs LLM to cite sources and acknowledge missing information
-- Low temperature (0.1) for factual, accurate responses
-
-## Usage
-
-### Main Menu
-
-```
-====================================================================================================
-LAQ RAG SYSTEM
-====================================================================================================
-1. Upload PDF           - Process and store LAQ documents
-2. Search LAQs          - Semantic search across stored documents
-3. Chat with LAQs       - Conversational Q&A with source citations
-4. Database Info        - View collection statistics
-5. Clear Database       - Reset and start fresh
-6. Exit
-====================================================================================================
-```
-
-### Example: Upload PDF
-
+### Verify Installation
 ```bash
-Select (1-6): 1
-Enter PDF path: sample_pdfs/sample1.pdf
+# Check Python
+python --version
 
-🔄 Converting PDF to Markdown...
-✅ Conversion successful
-🤖 Processing with Mistral LLM...
+# Check Node.js
+node --version
 
-📊 STRUCTURED LAQ DATA
-====================================================================================================
-📄 PDF Title: TENDER ISSUED FOR LEASING OF JETTY SPACE
-📝 LAQ Type: Starred
-🔢 LAQ Number: 010C
-👤 Minister: Shri. Aleixo Sequeira
-📅 Date: 08-08-2024
-
-❓ Question-Answer Pairs: 3
-[Shows extracted Q&A pairs...]
-
-✅ Store this data in database? (yes/no): yes
-Generating embeddings: 100%|████████████████████| 3/3 [00:02<00:00, 1.2it/s]
-✅ Stored 3/3 Q&A pairs from sample1.pdf
+# Check Ollama
+ollama list
 ```
 
-### Example: Search
+## 🛠️ Installation
 
+### 1. Clone Repository
 ```bash
-Select (1-6): 2
-Enter query: jetty leasing tender details
-
-🔍 SEARCH RESULTS
-====================================================================================================
-RESULT #1
-📍 SOURCE: SAMPLE1
-   LAQ #010C (Starred) | Date: 08-08-2024 | 🟢 STRONG MATCH (87.3%)
-
-❓ QUESTION: the details of all tender issued for leasing jetty space...
-✅ ANSWER: Santa Monica Jetty: Rs. 1.23 Cr plus taxes...
-====================================================================================================
+git clone <repository-url>
+cd minimal-local-RAG
 ```
 
-### Example: Chat
-
+### 2. Backend Setup
 ```bash
-Select (1-6): 3
-Enter question: What are the tender amounts for jetty leasing?
+cd backend
 
-🤖 Generating response...
+# Create virtual environment
+python -m venv venv
 
-AI RESPONSE:
-====================================================================================================
-According to LAQ #010C, the Santa Monica Jetty tender (GTDC/JETTY/2019-20/3185)
-had a financial bid of Rs. 1.23 Crores plus GST (Rs. 22,14,000).
+# Activate virtual environment
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate     # Windows
 
-The annual amounts received are:
-- 2023-24: Rs. 1,45,14,000 (inclusive of GST)
-- 2024-25: Rs. 1,45,14,000 (inclusive of GST)
+# Install dependencies
+pip install -r requirements.txt
 
-Source: LAQ #010C (Starred), dated 08-08-2024
-====================================================================================================
+# Copy environment file
+cp ../.env.example .env
 
-📚 Source LAQs:
-  • LAQ #010C (87.3% match)
-  • LAQ #025A (72.1% match)
+# Edit .env if needed (optional)
 ```
 
-## Configuration
-
-Customize settings via `.env` file (see `.env.example`):
-
+### 3. Frontend Setup
 ```bash
-# Models
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Edit .env if needed (optional - default: http://localhost:8000)
+```
+
+## 🎯 Running the Application
+
+### Start Backend (Terminal 1)
+```bash
+cd backend
+source venv/bin/activate  # Activate venv
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend will be available at:
+- **API:** http://localhost:8000
+- **Swagger Docs:** http://localhost:8000/api/docs
+- **ReDoc:** http://localhost:8000/api/redoc
+
+### Start Frontend (Terminal 2)
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend will be available at:
+- **Web App:** http://localhost:5173
+
+### Verify Everything Works
+1. Open http://localhost:5173
+2. You should see the LAQ RAG Dashboard
+3. Check database stats on the dashboard
+
+## 📚 API Endpoints
+
+### Upload
+- `POST /api/upload/` - Upload and process LAQ PDF
+
+### Search
+- `POST /api/search/` - Semantic search on LAQs
+  ```json
+  {
+    "query": "education budget",
+    "top_k": 5,
+    "threshold": 0.6
+  }
+  ```
+
+### Chat
+- `POST /api/chat/` - Chat with LAQ knowledge base
+  ```json
+  {
+    "question": "What is the education budget?",
+    "top_k": 5
+  }
+  ```
+
+### Database
+- `GET /api/database/info` - Get database information
+
+### Health
+- `GET /api/health` - Health check endpoint
+
+## 🎨 Features
+
+### ✅ Implemented
+- 🏠 **Dashboard:** Overview with database stats
+- 🔍 **Search:** Semantic search with similarity scores
+- 📊 **Database Info:** View collection statistics
+- 🎨 **Dark Mode UI:** Following Perplexity Pro design system
+- 📱 **Responsive:** Mobile-friendly interface
+
+### 🚧 Coming Soon
+- 💬 **Chat Interface:** Full conversational UI
+- 📤 **Drag & Drop Upload:** PDF upload with progress
+- 📈 **Analytics:** Usage statistics and insights
+- 🔐 **Authentication:** User management (optional)
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+pytest tests/ -v
+
+# With coverage
+pytest tests/ --cov=app --cov-report=html
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test  # Coming soon
+```
+
+## 📖 Usage Guide
+
+### 1. Upload LAQ PDF
+- Navigate to Upload page
+- Select PDF file
+- System will:
+  - Extract Q&A pairs
+  - Generate embeddings
+  - Store in vector database
+
+### 2. Search LAQs
+- Navigate to Search page
+- Enter search query
+- View results with similarity scores
+- See metadata (LAQ number, minister, date)
+
+### 3. Chat with LAQs
+- Navigate to Chat page
+- Ask questions in natural language
+- Get answers with source citations
+
+### 4. View Database Info
+- Navigate to Database page
+- See collection statistics
+- View configuration
+
+## 🔧 Configuration
+
+### Backend (.env)
+```bash
+# Database
+DB_PATH=./laq_db
+COLLECTION_NAME=laqs
+
+# Ollama
+OLLAMA_BASE_URL=http://localhost:11434
 LLM_MODEL=mistral
 EMBEDDING_MODEL=nomic-embed-text
 
-# Retrieval Parameters
-TOP_K_SEARCH=5
-TOP_K_CHAT=3
-SIMILARITY_THRESHOLD=0.3
-
-# Processing Limits
-MARKDOWN_MAX_LENGTH=10000
-METADATA_MAX_LENGTH=500
-
-# LLM Generation
+# RAG Settings
+TOP_K=5
+SIMILARITY_THRESHOLD=0.6
 TEMPERATURE=0.1
-TOP_P=0.9
-
-# Database
-DB_PATH=./laq_db
 ```
 
-## Running Tests
-
+### Frontend (.env)
 ```bash
-# Run all tests
-pytest tests/
-
-# Run with coverage report
-pytest tests/ --cov=. --cov-report=html
-
-# View coverage
-open htmlcov/index.html  # or your browser
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
-## Sample PDFs
+## 📁 Project Structure Details
 
-Three sample LAQ PDFs are included in `sample_pdfs/`:
-- `sample1.pdf` - Jetty leasing tender questions
-- `sample2.pdf` - Infrastructure development queries
-- `sample3.pdf` - Budget allocation questions
+### Backend Services
+- **config.py:** Configuration management
+- **database.py:** ChromaDB operations
+- **embeddings.py:** Embedding generation
+- **pdf_processor.py:** PDF processing pipeline
+- **rag.py:** Search and chat logic
 
-## Architecture Highlights
+### Frontend Pages
+- **Dashboard:** Overview and quick actions
+- **Search:** Semantic search interface
+- **Chat:** Conversational interface (coming soon)
+- **Upload:** PDF upload (coming soon)
+- **Database:** Database information (coming soon)
 
-### Modular Design
-- **config.py**: Centralized configuration with validation
-- **database.py**: ChromaDB operations with custom exceptions
-- **embeddings.py**: Ollama embedding service with connection verification
-- **pdf_processor.py**: PDF → structured data with Pydantic validation
-- **rag.py**: Search and chat with improved prompts
-- **cli.py**: User interface with progress tracking
-- **main.py**: Entry point with comprehensive error handling
+## 🎨 Design System
 
-### Data Models (Pydantic)
+The application follows a comprehensive design system inspired by Perplexity Pro:
 
-```python
-class QAPair(BaseModel):
-    question: str = Field(min_length=1)
-    answer: str = Field(min_length=1)
+- **Colors:** OKLCH color space, dark mode first
+- **Typography:** System fonts, optimized weights
+- **Spacing:** 8px grid system
+- **Components:** Reusable, accessible UI components
 
-class LAQData(BaseModel):
-    pdf_title: str
-    laq_type: str
-    laq_number: str
-    minister: str
-    date: str
-    qa_pairs: List[QAPair] = Field(min_items=1)
-    tabled_by: Optional[str] = None
-    attachments: List[str] = Field(default_factory=list)
+See `docs/DESIGN_GUIDE.md` for complete design specifications.
+
+## 🚀 Deployment (Future)
+
+### Backend
+```bash
+# Production server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-### Error Handling
+### Frontend
+```bash
+# Build for production
+npm run build
 
-Custom exception hierarchy provides actionable guidance:
-- `DatabaseError` - Database operation failures
-- `EmbeddingError` - Embedding generation issues
-  - `OllamaConnectionError` - "Run: ollama serve"
-  - `OllamaModelNotFoundError` - "Run: ollama pull mistral"
-- `PDFProcessingError` - PDF processing failures
+# Preview production build
+npm run preview
+```
 
-## Troubleshooting
+Serve the `dist/` folder with any static file server.
+
+## 🐛 Troubleshooting
 
 ### Ollama Connection Error
-```
-❌ Error: Cannot connect to Ollama
-Solution: Run 'ollama serve' in a terminal
-```
+```bash
+# Ensure Ollama is running
+ollama serve
 
-### Model Not Found
-```
-❌ Error: Model 'mistral' not found
-Solution: Run 'ollama pull mistral'
+# Check models are installed
+ollama list
 ```
 
-### No Search Results
-- Check if PDFs have been uploaded and stored
-- Try lowering `SIMILARITY_THRESHOLD` in `.env`
-- Use more general search terms
+### Backend Import Errors
+```bash
+# Ensure you're in the backend directory
+cd backend
 
-## Future Enhancements
+# Ensure venv is activated
+source venv/bin/activate
 
-- [ ] Web interface with Streamlit or Gradio
-- [ ] Support for additional document formats (DOCX, TXT, HTML)
-- [ ] Advanced chunking strategies for long documents
-- [ ] Multi-document ingestion in a single operation
-- [ ] Query history and saved searches
-- [ ] Export search results to CSV/JSON
-- [ ] Docker deployment with docker-compose
-- [ ] Support for multiple embedding models
-- [ ] Incremental updates without re-processing
+# Reinstall dependencies
+pip install -r requirements.txt
+```
 
-## Contributing
+### Frontend Build Errors
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+### CORS Errors
+- Ensure backend is running on port 8000
+- Check CORS configuration in `backend/app/main.py`
+- Verify `VITE_API_BASE_URL` in frontend `.env`
 
-## License
+## 📝 Development Notes
 
-This project is open source and available under the MIT License.
+### Adding New API Endpoint
+1. Create endpoint in `backend/app/api/endpoints/`
+2. Add router to `backend/app/main.py`
+3. Update frontend service in `frontend/src/services/api.js`
+4. Create UI component in frontend
 
-## Acknowledgments
+### Adding New Page
+1. Create component in `frontend/src/pages/`
+2. Add route in `frontend/src/App.jsx`
+3. Add navigation link in `Sidebar.jsx`
 
-- Built with [Ollama](https://ollama.ai) for local LLM inference
-- PDF processing powered by [Docling](https://github.com/DS4SD/docling)
-- Vector storage via [ChromaDB](https://www.trychroma.com)
-- Original concept inspired by local RAG implementations
+## 🤝 Contributing
+
+1. Follow the design guide (`docs/DESIGN_GUIDE.md`)
+2. Maintain code style consistency
+3. Write tests for new features
+4. Update documentation
+
+## 📄 License
+
+[Your License Here]
+
+## 🙏 Acknowledgments
+
+- **Perplexity AI** - UI/UX inspiration
+- **Ollama** - Local LLM infrastructure
+- **ChromaDB** - Vector database
+- **FastAPI** - Modern Python web framework
+- **React** - UI library
+
+## 📞 Support
+
+For issues and questions:
+- Check `docs/CLAUDE.md` for development guide
+- See API docs at http://localhost:8000/api/docs
+- Review design guide in `docs/DESIGN_GUIDE.md`
 
 ---
 
-**Note**: This system requires Ollama to be installed and running locally. No external API keys or internet connectivity required for operation.
+**Built with ❤️ for privacy-focused local RAG**

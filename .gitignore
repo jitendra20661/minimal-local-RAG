@@ -1,33 +1,63 @@
-# Ignore everything by default
-*
-
-# Allow specific Python files
-!*.py
-!requirements.txt
-!README.md
-!CLAUDE.md
-!.env.example
-
-# Allow specific directories
-!sample_pdfs/
-!tests/
-
-# Ignore environment and cache files
-.env
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+*$py.class
 *.so
-*.egg
+.Python
+venv/
+env/
+ENV/
 *.egg-info/
 dist/
 build/
 
-# Ignore database and logs
+# Database
 laq_db/
-*.log
+*.db
+*.sqlite
 
-# Allow .gitignore itself
-!.gitignore
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/
+
+# Node.js / Frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Temporary files
+*.tmp
+*.temp
+
+# CLI reference (deprecated)
+cli.py
+main.py
+dashboard.html
+/docs/CLAUDE.md
+/CLAUDE.md
