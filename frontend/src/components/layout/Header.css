@@ -1,0 +1,23 @@
+.header {
+  height: var(--header-height);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--size-lg);
+  background: var(--background-base);
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: var(--font-semibold);
+  background: linear-gradient(90deg, var(--foreground-color) 70%, var(--accent-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--size-sm);
+}

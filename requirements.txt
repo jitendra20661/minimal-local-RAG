@@ -3,4 +3,8 @@ langchain
 langchain_community
 chromadb
 ollama
-nomic-embed-text
+python-dotenv
+pydantic
+tqdm
+pytest
+pytest-cov
