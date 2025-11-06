@@ -366,10 +366,9 @@ npm install
 - **FastAPI** - Modern Python web framework
 - **React** - UI library
 
-## 📞 Support
+## 📞 Support jeet 
 
 For issues and questions:
-- Check `docs/CLAUDE.md` for development guide
 - See API docs at http://localhost:8000/api/docs
 - Review design guide in `docs/DESIGN_GUIDE.md`
 

@@ -3,7 +3,7 @@
 from typing import List
 import ollama
 
-from config import Config
+from app.services.config import Config
 
 
 class EmbeddingError(Exception):

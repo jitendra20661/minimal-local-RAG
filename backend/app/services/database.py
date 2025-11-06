@@ -6,7 +6,7 @@ from typing import List, Dict, Optional, Tuple
 import chromadb
 from chromadb.api.models.Collection import Collection
 
-from config import Config
+from app.services.config import Config
 
 
 class DatabaseError(Exception):

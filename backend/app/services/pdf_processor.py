@@ -8,7 +8,7 @@ import ollama
 from docling.document_converter import DocumentConverter
 from pydantic import BaseModel, Field, ValidationError
 
-from config import Config
+from app.services.config import Config
 
 
 class QAPair(BaseModel):

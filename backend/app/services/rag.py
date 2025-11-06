@@ -4,9 +4,9 @@ import json
 from typing import List, Dict, Tuple, Optional
 import ollama
 
-from config import Config
-from database import LAQDatabase
-from embeddings import EmbeddingService
+from app.services.config import Config
+from app.services.database import LAQDatabase
+from app.services.embeddings import EmbeddingService
 
 
 class RAGError(Exception):

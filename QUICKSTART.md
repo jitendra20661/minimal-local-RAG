@@ -153,7 +153,6 @@ python main.py  # From root directory
 ## 📞 Need Help?
 
 - **API Documentation:** http://localhost:8000/api/docs
-- **Development Guide:** `docs/CLAUDE.md`
 - **Design System:** `docs/DESIGN_GUIDE.md`
 
 **Happy coding! 🎉**
