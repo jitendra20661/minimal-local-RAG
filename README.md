@@ -39,7 +39,7 @@ Instead of relying only on what the model was trained on, RAG allows it to look 
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/jeetsahoo/local-RAG-cli.git
+git clone https://github.com/jeetsahoo/minimal-local-RAG.git
 cd local-RAG-cli
 ```
 
