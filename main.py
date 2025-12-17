@@ -1,4 +1,4 @@
-import os
+﻿import os
 import re
 import json
 from pathlib import Path
@@ -6,6 +6,9 @@ import chromadb
 import ollama
 from docling.document_converter import DocumentConverter
 # from docling.document_converter import ConvertedDocument
+
+LLM_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct-q4_0")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
 DB_PATH = "./laq_db"
 os.makedirs(DB_PATH, exist_ok=True)
@@ -71,17 +74,10 @@ def store_in_ChromaDB(laq_data, pdf_name):
 
 
 
-
-
-
-
-
-
-
 def embed_text(text):
     """Generate embedding"""
     try:
-        return ollama.embed(model="nomic-embed-text", input=text)["embeddings"][0]
+        return ollama.embed(model=EMBED_MODEL, input=text)["embeddings"][0]
     except Exception as e:
         print(f"⚠️ Embedding error: {e}")
         return []
@@ -102,84 +98,229 @@ def extract_markdown_from_pdf(pdf_path):
         return None
 
 
-def structure_laqs_with_mistral(markdown_data, pdf_path):
-    """Use Mistral LLM to structure LAQ data from markdown"""
+def structure_laqs_with_mistral(markdown_data: str, pdf_path: str):
+
     try:
-        print("🤖 Processing with Mistral LLM...")
+        print("🤖 Processing LAQ Markdown with Mistral...")
 
         prompt = f"""
-You are a structured data extraction assistant. Extract Legislative Assembly Question (LAQ) details from the following text.
+You are a structured data extraction assistant specialized in OFFICIAL Legislative Assembly Question (LAQ) documents.
 
-The text comes from an official LAQ PDF and may include multi-line tables, line breaks, and subparts (a), (b), (c), etc.
+IMPORTANT CONTEXT:
+The input is RAW MARKDOWN TEXT extracted from an official LAQ PDF.
+It may contain headings, bullet points, flattened tables, page headers/footers,
+irregular line breaks, and sub-questions marked as (a), (b), (c), etc.
 
-Your goal is to output **well-structured JSON** where:
-- Each sub-question (a), (b), (c) becomes a **separate Q&A pair** in the "qa_pairs" list.
-- Questions and answers are **complete**, not truncated.
-- Original wording is **preserved exactly** — do not paraphrase or summarize.
-- Do not merge subparts into a single question.
+Your task is to extract COMPLETE, ACCURATE, and MACHINE-READABLE structured data.
+This output will be consumed by an e-Governance system, so correctness is critical.
 
----
+────────────────────────────────────────────
+CORE TASKS
+────────────────────────────────────────────
 
-### REQUIRED OUTPUT FORMAT
+1. Extract LAQ metadata:
+   - pdf_title
+   - laq_type (Starred / Unstarred)
+   - laq_number
+   - minister
+   - tabled_by
+   - date
 
+2. Extract QUESTION–ANSWER pairs:
+   - EACH sub-question ((a), (b), (c), etc.) MUST be a SEPARATE entry.
+   - Do NOT merge sub-questions.
+   - Preserve original wording EXACTLY.
+   - Do NOT paraphrase.
+   - Questions and answers must be complete.
+
+3. For EACH question–answer pair:
+   - Identify ALL relevant GOVERNANCE DOMAINS.
+   - Assign roles: "Primary" or "Secondary".
+   - Limit to MAXIMUM 3 domains.
+   - Assign confidence scores (0.00–1.00).
+   - Map EACH domain to its official Demand Number.
+
+4. Compute analytics fields:
+   - total_domains_identified
+   - is_inter_domain (true if more than one domain)
+
+────────────────────────────────────────────
+GOVERNANCE DOMAIN RULES
+────────────────────────────────────────────
+
+- Choose departments ONLY from the list below.
+- Use department names EXACTLY as written.
+- DO NOT invent new departments.
+- Always choose ONE Primary domain when possible.
+- If no domain clearly applies, return:
+
+"domains": [
+  {{
+    "department": "Unclear",
+    "demand_number": null,
+    "role": "Primary",
+    "confidence": 0.50
+  }}
+]
+
+────────────────────────────────────────────
+DEPARTMENT → DEMAND NUMBER MAPPING
+────────────────────────────────────────────
+
+Health → 32
+Education → 27
+Agriculture → 10
+Water Resources → 22
+Public Works Department → 21
+Transport → 33
+Tourism → 41
+Revenue → 16
+Urban Development → 25
+Rural Development → 23
+Power → 30
+Environment → 19
+Home → 18
+Industries → 11
+Ports → 40
+River Navigation → 42
+Fisheries → 12
+Social Welfare → 35
+Women and Child Development → 34
+Housing → 26
+Law and Judiciary → 17
+Planning and Statistics → 08
+Cooperation → 14
+Information Technology → 05
+Forest → 20
+Mining → 09
+Disaster Management → 36
+Panchayati Raj → 24
+Skill Development → 38
+Labour and Employment → 15
+Food and Civil Supplies → 13
+Unclear → null
+
+────────────────────────────────────────────
+FEW-SHOT EXAMPLES
+────────────────────────────────────────────
+
+INPUT (Markdown):
+(a) whether additional anganwadi centres have been sanctioned?
+(b) steps taken to provide health check-ups to anganwadi children?
+
+OUTPUT (partial):
 {{
-  "pdf_title": "TENDER ISSUED FOR LEASING OF JETTY SPACE",
-  "laq_type": "Starred",
-  "laq_number": "010C",
-  "minister": "Shri. Aleixo Sequeira, Minister for Captain of Ports Department",
-  "tabled_by": "Shri Digambar Kamat",
-  "date": "08-08-2025",
   "qa_pairs": [
     {{
-      "question": "(a) the details with the total number of jetty spots available in the river Mandovi for use by Casino and cruises vessels including location, area of use in sq.mt of all the individual jetty spots with details of all vessels that are using each particular jetty spot and the purpose of usage;",
-      "answer": "Sir, there are total 12 number of jetty spots in river Mandovi for use by Casino and cruises vessels. The details are enclosed at Annexure - I."
+      "question": "(a) whether additional anganwadi centres have been sanctioned?",
+      "answer": "...",
+      "domains": [
+        {{
+          "department": "Women and Child Development",
+          "demand_number": 34,
+          "role": "Primary",
+          "confidence": 0.86
+        }}
+      ],
+      "total_domains_identified": 1,
+      "is_inter_domain": false
     }},
     {{
-      "question": "(b) the details of all tender issued for leasing jetty space in river Mandovi from the year 2020 till date including tender number, financial bid, copy of lease agreement, amounts received year-wise from inception of tender;",
-      "answer": "Santa Monica Jetty (Tourism Department)\\n1. Tender No. GTDC/JETTY/2019-20/3185\\n2. Financial Bid: Rs. 1.23 Cr. Plus taxes\\n3. Copy of lease agreement enclosed at Annexure - II\\n4. Year Amount Received\\n16/07/2023 to 15/07/2024: 1,23,00,000 + GST 22,14,000\\n16/07/2024 to 15/07/2025: 1,23,00,000 + GST 22,14,000"
-    }},
-    {{
-      "question": "(c) the details of the last tender floated by the Government/COP/RND Department for leasing the River Navigation jetty opposite the Old Secretariat including details of all file noting with copy of lease agreement, total amount received by the Government from lease holders from its inception year-wise?",
-      "answer": "Nil"
+      "question": "(b) steps taken to provide health check-ups to anganwadi children?",
+      "answer": "...",
+      "domains": [
+        {{
+          "department": "Women and Child Development",
+          "demand_number": 34,
+          "role": "Primary",
+          "confidence": 0.82
+        }},
+        {{
+          "department": "Health",
+          "demand_number": 32,
+          "role": "Secondary",
+          "confidence": 0.71
+        }}
+      ],
+      "total_domains_identified": 2,
+      "is_inter_domain": true
     }}
-  ],
-  "attachments": ["Annexure - I", "Annexure - II"]
+  ]
 }}
 
----
+────────────────────────────────────────────
+REQUIRED OUTPUT FORMAT (STRICT JSON)
+────────────────────────────────────────────
 
-### RULES
-1. Detect and reconstruct full text of each sub-question and its matching answer.
-2. Treat text like “(a) …”, “(b) …”, “(c) …” as boundaries for new Q&A pairs.
-3. Combine lines until a new sub-question or section begins.
-4. Keep punctuation and formatting (like “\\n” for line breaks) intact.
-5. Output **only valid JSON**. Do not include explanations or extra commentary.
+{{
+  "pdf_title": "",
+  "laq_type": "",
+  "laq_number": "",
+  "minister": "",
+  "tabled_by": "",
+  "date": "",
+  "qa_pairs": [
+    {{
+      "question": "",
+      "answer": "",
+      "domains": [
+        {{
+          "department": "",
+          "demand_number": null,
+          "role": "Primary",
+          "confidence": 0.00
+        }}
+      ],
+      "total_domains_identified": 1,
+      "is_inter_domain": false
+    }}
+  ],
+  "attachments": []
+}}
 
-Now extract the structured data in this format from the following text:
+────────────────────────────────────────────
+STRICT EXTRACTION RULES
+────────────────────────────────────────────
 
-{markdown_data[:10000]}
+1. Treat (a), (b), (c) as HARD boundaries.
+2. Combine lines until next sub-question.
+3. Preserve formatting using "\\n".
+4. NEVER paraphrase or summarize.
+5. Output ONLY valid JSON.
+6. No explanations, comments, or markdown.
+
+Now extract the structured data from the following MARKDOWN text:
+
+{markdown_data[:12000]}
 """
 
+        response = ollama.generate(
+            model=LLM_MODEL,
+            prompt=prompt,
+            stream=False,
+            format="json",
+            options={"temperature": 0}
+        )
 
-        response = ollama.generate(model="mistral", prompt=prompt, stream=False)
-        response_text = response['response'].strip()
+        raw_text = response.get("response", "").strip()
 
+        # Attempt strict JSON parsing
         try:
-            laq_data = json.loads(response_text)
-            return laq_data
+            return json.loads(raw_text)
+
         except json.JSONDecodeError:
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            # Fallback: extract JSON block
+            json_match = re.search(r"\{.*\}", raw_text, re.DOTALL)
             if json_match:
-                laq_data = json.loads(json_match.group())
-                return laq_data
+                return json.loads(json_match.group())
             else:
-                print("❌ Could not parse Mistral response as JSON")
-                print(f"Response: {response_text[:200]}")
+                print("❌ Failed to parse JSON from Mistral output")
+                print(raw_text[:500])
                 return None
+
     except Exception as e:
         print(f"❌ Mistral processing error: {e}")
         return None
-
 
 
 
@@ -219,14 +360,14 @@ def upload_pdf():
     print("\n" + "─"*100)
     for idx, qa in enumerate(qa_pairs, 1):
         print(f"\n[Q&A Pair {idx}]")
-        print(f"  ❓ Q: {qa.get('question', 'N/A')}")
-        print(f"  ✅ A: {qa.get('answer', 'N/A')}")
+        print(f" ❓ Q: {qa.get('question', 'N/A')}")
+        print(f" ✅ A: {qa.get('answer', 'N/A')}")
     
     attachments = laq_data.get('attachments', [])
     if attachments:
         print(f"\n📎 Attachments:")
         for att in attachments:
-            print(f"  • {att}")
+            print(f" • {att}")
     
     print("\n" + "="*100)
     
@@ -285,13 +426,13 @@ def search_laq():
             print(f"└{'─'*98}┘")
             
             print(f"\n📍 SOURCE: {pdf_name}")
-            print(f"   LAQ #{laq_no} ({laq_type}) | Date: {meta.get('date', 'N/A')} | {match_quality} ({score}%)")
+            print(f" LAQ #{laq_no} ({laq_type}) | Date: {meta.get('date', 'N/A')} | {match_quality} ({score}%)")
             
             print(f"\n👤 Minister: {meta.get('minister', 'Not mentioned')}")
             
-            print(f"\n❓ QUESTION:\n   {meta.get('question', 'N/A')[:200]}..." if len(meta.get('question', '')) > 200 else f"\n❓ QUESTION:\n   {meta.get('question', 'N/A')}")
+            print(f"\n❓ QUESTION:\n {meta.get('question', 'N/A')[:200]}..." if len(meta.get('question', '')) > 200 else f"\n❓ QUESTION:\n {meta.get('question', 'N/A')}")
             
-            print(f"\n✅ ANSWER:\n   {meta.get('answer', 'N/A')[:200]}..." if len(meta.get('answer', '')) > 200 else f"\n✅ ANSWER:\n   {meta.get('answer', 'N/A')}")
+            print(f"\n✅ ANSWER:\n {meta.get('answer', 'N/A')[:200]}..." if len(meta.get('answer', '')) > 200 else f"\n✅ ANSWER:\n {meta.get('answer', 'N/A')}")
             
             # Display attachments if any
             attachments_str = meta.get('attachments', '[]')
@@ -344,7 +485,7 @@ def chat_laq():
             context += f"\nLAQ Type: {meta.get('type', 'N/A')}\nLAQ No: {meta.get('laq_num', 'N/A')}\nMinister: {meta.get('minister', 'N/A')}\nDate: {meta.get('date', 'N/A')}\nQ: {meta.get('question', 'N/A')}\nA: {meta.get('answer', 'N/A')}{attachments_text}\n"
         
         prompt = f"{context}\n\nAnswer this query based on above LAQs:\n{query}"
-        response = ollama.generate(model="mistral", prompt=prompt, stream=False)
+        response = ollama.generate(model=LLM_MODEL, prompt=prompt, stream=False, options={"temperature": 0})
         
         print("\n" + "="*100)
         print("AI RESPONSE:")
